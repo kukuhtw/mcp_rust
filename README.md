@@ -1,192 +1,116 @@
 
+
+````markdown
+## 🔄 Sequence Flow (Mermaid)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant F as ChatPanel (Vue 3)
+    participant B as Backend (Rust/Axum)
+    participant R as MCP Router
+    participant O as OpenAI (Intent)
+    participant E as API Endpoints (dummy)
+    participant DB as MySQL
+
+    U->>F: Ask question (natural language)
+    F->>B: POST /api/chat (or /api/chat/stream)
+    B->>R: Hand off to MCP Router
+    R->>O: Intent detection (Responses API + JSON Schema)
+    O-->>R: Intent + routing plan (e.g., ci_status → /api/gitlab-ci)
+    R->>E: Fetch data from mapped endpoint(s)
+    E-->>R: JSON payload(s)
+    R->>DB: (Optional) persist/query cached results
+    DB-->>R: Data rows (if any)
+    R-->>B: Joined + normalized result
+    B-->>F: SSE stream (received → llm_start → route_planned → fetch_progress → joined → done)
+    F-->>U: Render human-readable answer
+````
+
+````
+
 ```markdown
-# 🚇 SMRT MCP PoC
+## 🏗 Architecture Overview
 
-> **Proof of Concept (PoC)** implementation of the **Model Context Protocol (MCP)** using **Rust**,  
-> applied in an **IT Operations** scenario for the **Singapore Mass Rapid Transportation (SMRT)** system.  
+### Components
+- **Frontend (Vue 3 + Vite + TS)**  
+  ChatPanel UI, streams SSE, renders status chips (intent, endpoint, phases).
+- **Backend (Rust/Axum)**  
+  HTTP API, SSE streaming, error handling, request tracing.
+- **MCP Router (Rust module)**  
+  - Prompt builder → OpenAI Responses API (JSON Schema)  
+  - Intent classifier → endpoint planner (single/multi-endpoint join)  
+  - Normalizer/Joiner → consistent response shape for UI
+- **AI (OpenAI GPT)**  
+  Intent detection & structured output (schema-validated).
+- **Data Sources (Dummy Endpoints)**  
+  `/api/gitlab-ci`, `/api/runtime-logs`, `/api/observability`, `/api/security-auth`, `/api/incident-metrics`, etc.
+- **Database (MySQL 8)**  
+  App config, seeds; optional caching table (`api_results`) and auth tables (`users`, `sessions`).
+- **Infra (Docker & Compose)**  
+  Reproducible builds for backend, frontend, and MySQL.
 
-⚠️ **Disclaimer**  
-This project is for **demonstration & educational purposes only**.  
-I am **not affiliated** with the IT Department of SMRT.  
+### High-Level Data Flow
+1. User asks a question in ChatPanel → `POST /api/chat` (or `…/stream` for SSE).
+2. Backend passes the request to **MCP Router**.
+3. Router calls **OpenAI** to classify intent & produce a routing plan (JSON Schema).
+4. Router queries one or more **dummy endpoints**, optionally consults **MySQL** (cache/config).
+5. Router **joins & normalizes** results → Backend **streams** them to the UI via **SSE**.
+6. Frontend renders incremental phases and the final human-readable answer.
 
----
-
-## 🧩 What is MCP?
-
-**Model Context Protocol (MCP)** is a mechanism that allows an AI Assistant to:  
-
-1. **Understand natural-language questions** from users.  
-2. **Detect the intent** (e.g., `logs_fetch`, `ci_status`).  
-3. **Map the intent** to the correct **API endpoint(s)**.  
-4. **Fetch data** → and let the AI generate a **human-readable answer**.  
-
-💡 **Example Scenario:**  
-> User: *“Did the last GitLab CI job for the main branch succeed or fail?”*  
-> 🔀 MCP → `/api/gitlab-ci` → returns dummy JSON → AI composes a human-readable response.  
-
----
-
-## 🔧 Tech Stack
-
-- 🦀 **Backend**: Rust (Axum, SQLx, Reqwest, SSE)  
-- ⚡ **Frontend**: Vue 3 + Vite + TypeScript  
-- 🗄️ **Database**: MySQL 8  
-- 🐳 **Infrastructure**: Docker & Docker Compose  
-- 🤖 **AI**: OpenAI GPT (Responses API + JSON Schema)  
-
----
-
-## 📂 Project Structure
-
-```
-
-smrt-mcp-poc/
-├─ backend/       # Rust backend (API + MCP Router)
-├─ frontend/      # Vue 3 chat dashboard
-├─ data/          # seed/init SQL
-├─ migrations/    # schema migrations
-├─ docker/        # dockerfiles & compose
-└─ README.md
-
-```
+### Non-Goals (for this PoC)
+- Real integrations (Grafana, Prometheus, GitLab API) — replaced with dummy endpoints.
+- Multi-tenant auth (JWT scaffolding listed under “Next Steps”).
+- Production-grade observability/security (kept minimal for clarity).
 
 ---
 
-## ⚡ MCP Endpoint Diagram
+### Architecture Diagram (Mermaid)
 
-This PoC includes **10 dummy endpoints**:
+```mermaid
+flowchart TD
+    subgraph Client
+      U[User] --> F[ChatPanel (Vue 3 + Vite)]
+    end
 
-```
+    subgraph Server[Rust Backend (Axum)]
+      F -->|HTTP/SSE| B[API Gateway & SSE Handler]
+      B --> R[MCP Router<br/>(Prompt Builder • Intent Classifier • Joiner)]
+      R -->|JSON Schema| O[OpenAI Responses API]
+      R --> E1[/api/gitlab-ci/]
+      R --> E2[/api/runtime-logs/]
+      R --> E3[/api/observability/]
+      R --> E4[/api/security-auth/]
+      R --> E5[/api/incident-metrics/]
+      R <-- DB[(MySQL 8)]
+      B --> DB
+    end
 
-/api/runtime-logs     → Synthetic container logs
-/api/gitlab-ci        → CI/CD status & failed tests
-/api/observability    → Metrics (latency, unresolved tickets, etc.)
-/api/security-auth    → Security events (failed logins, errors)
-/api/incident-metrics → MTTR, deployment comparisons
-/api/test-join        → Join multiple endpoints (dummy test)
-/api/settings         → System settings dummy
-/api/alerts           → On-call notifications dummy
-/api/releases         → Release tracking dummy
-/api/deployments      → Deployment metrics dummy
+    O -.-> R
+    E1 -. JSON .-> R
+    E2 -. JSON .-> R
+    E3 -. JSON .-> R
+    E4 -. JSON .-> R
+    E5 -. JSON .-> R
 
+    R -->|Normalized Result| B
+    B -->|SSE Stream| F
+    F --> U
 ````
 
-📊 **How it works:**  
-User Question → MCP Intent Detection → API Endpoint → Fetch Data → AI Response → Chat UI  
+### Suggested Tables (optional, PoC-friendly)
+
+* `settings` — key/value app configuration.
+* `api_results` — simple cache: `endpoint`, `params_hash`, `payload`, `created_at`.
+* `users` / `sessions` — for future JWT-based auth.
+
+### Extension Ideas
+
+* Plug **Grafana/Prometheus** for real metrics.
+* Add **rate limits** & **circuit breakers** per endpoint.
+* Persist **audit logs** for prompt, intent, and endpoint calls.
+* Expose **/internal/debug** for tracing intent & routing decisions.
 
 ---
-
-## 🔄 Sequence Flow
-
-```text
-+---------+        +-------------+        +-----------------+        +------------+
-|  User   | -----> |  ChatPanel  | -----> |   MCP Router    | -----> |  Endpoint  |
-+---------+        +-------------+        +-----------------+        +------------+
-     |                   |                         |                        |
-     | Ask question       |  POST /api/chat        | Detect intent          |
-     |------------------->|----------------------->|----------------------->|
-     |                    |                        |   Call API (dummy)     |
-     |                    |                        |----------------------->|
-     |                    |                        |  Return JSON Response  |
-     |                    |<-----------------------|<-----------------------|
-     |  AI answer shown   |  Stream via SSE        | Join + Format Result   |
-     |<-------------------|<-----------------------|                         |
-````
-
-🌀 SSE Debug Phases:
-`received → llm_start → route_planned → fetch_progress → joined → done`
-
----
-
-## 💬 Example Questions
-
-Here are **sample natural-language queries** that can be answered by MCP:
-
-* ❓ *Why did the CI/CD pipeline fail to deploy to staging last night?*
-* 📜 *Can you show me the latest runtime logs for the payments service?*
-* 📝 *How many unresolved tickets are in the observability dashboard right now?*
-* 🔍 *Did the last GitLab CI job for the main branch succeed or fail?*
-* ⚠️ *What is the current error rate in the production API gateway?*
-* ⏱ *Can you compare the deployment duration between staging and production for the last 3 releases?*
-* 📂 *Show me the container logs for the auth-service during yesterday’s deployment.*
-* 🛠 *Which microservice caused the rollback in last night’s release?*
-* 🧪 *List all failed test cases from the last CI run.*
-* 📊 *What is the average response time for the orders API in the past 24 hours?*
-
----
-
-## ⚙️ Setup & Run
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/your-org/smrt-mcp-poc.git
-cd smrt-mcp-poc
-```
-
-### 2. Create `.env`
-
-```env
-DATABASE_URL=mysql://smrt:smrtpass@db:3306/smrt_mcp
-OPENAI_API_KEY=sk-your-key
-OPENAI_MODEL=gpt-4o-mini
-SYSTEM_PROMPT=You are an MCP intent router for SMRT IT Department.
-RUST_LOG=info
-TZ=Asia/Singapore
-```
-
-### 3. Run with Docker Compose
-
-```bash
-make build
-make up
-make logs
-```
-
-Services:
-
-* Backend → [http://localhost:8080](http://localhost:8080)
-* Frontend → [http://localhost:3000](http://localhost:3000)
-* MySQL → `localhost:3306` (`smrt/smrtpass`, db: `smrt_mcp`)
-
----
-
-## ✅ Testing
-
-Health Check:
-
-```bash
-curl http://localhost:8080/health
-# ok
-```
-
-Dummy Join Test:
-
-```bash
-curl "http://localhost:8080/api/test-join?date_from=2025-09-14&date_to=2025-09-14&tz=Asia/Singapore"
-```
-
----
-
-## 📌 Next Steps
-
-* 🔗 Integrate with real Observability APIs (Grafana, Prometheus)
-* ⚡ Add caching (`api_results`)
-* 🔒 Multi-user authentication + JWT
-* 📡 Full SSE debug logs with OpenAI streaming
-
----
-
-## 👤 Author
-
-**Kukuh Tripamungkas Wicaksono (Kukuh TW)**
-💻 Software Architect
-
-* 📧 Email: [kukuhtw@gmail.com](mailto:kukuhtw@gmail.com)
-* 📱 WhatsApp: [wa.me/628129893706](https://wa.me/628129893706)
-* 🔗 LinkedIn: [linkedin.com/in/kukuhtw](https://www.linkedin.com/in/kukuhtw)
-* 🐙 GitHub: [github.com/kukuhtw](https://github.com/kukuhtw)
-
----
-
 
