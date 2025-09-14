@@ -142,9 +142,9 @@ flowchart TD
 * `users` / `sessions` — for future JWT-based auth.
 
 ---
-Awesome—here’s a **ready-to-paste** README section that adds your **10 example questions** and shows **how the MCP server routes each one** (intent → endpoint(s) → params → result shape). It matches the style of your current README.
 
-````markdown
+
+```
 ## 💬 Example Questions & How MCP Routes Them
 
 Below are 10 natural-language questions and how the **MCP Router** resolves each:
