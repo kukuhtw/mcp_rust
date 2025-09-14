@@ -43,13 +43,13 @@ User: *“Did the last GitLab CI job for the main branch succeed or fail?”*
 
 ---
 
-## 📂 Project Structure
 
 
 
 ## 🔄 Sequence Flow (Mermaid)
 
 ```mermaid
+
 sequenceDiagram
     autonumber
     participant U as User
@@ -74,10 +74,12 @@ sequenceDiagram
     F-->>U: Render human-readable answer
 ````
 
-````
 
 
-```markdown
+
+```
+
+
 ## 🏗 Architecture Overview
 
 ### Components
