@@ -8,6 +8,9 @@
 This project is for **demonstration & educational purposes only**.  
 I am **not affiliated** with the IT Department of SMRT.  
 
+demo video
+https://www.youtube.com/watch?v=tQXJ5nkkcrk
+
 ---
 
 ## 🧩 What is MCP?
