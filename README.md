@@ -8,8 +8,9 @@
 This project is for **demonstration & educational purposes only**.  
 I am **not affiliated** with the IT Department of SMRT.  
 
-demo video
-https://www.youtube.com/watch?v=tQXJ5nkkcrk
+## 🎥 Demo Video
+
+[![Watch the demo](https://img.youtube.com/vi/tQXJ5nkkcrk/0.jpg)](https://www.youtube.com/watch?v=tQXJ5nkkcrk)
 
 ---
 
