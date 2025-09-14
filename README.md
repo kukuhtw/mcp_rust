@@ -46,6 +46,7 @@ User: *“Did the last GitLab CI job for the main branch succeed or fail?”*
 ## 🔄 Sequence Flow
 
 ```mermaid
+
 sequenceDiagram
     autonumber
     participant U as User
@@ -68,6 +69,7 @@ sequenceDiagram
     R-->>B: Joined + normalized result
     B-->>F: SSE stream (phases)
     F-->>U: Render answer
+
 ````
 
 🌀 SSE Debug Phases:
