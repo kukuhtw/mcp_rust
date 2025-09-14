@@ -99,33 +99,37 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    subgraph Client
-      U[User] --> F["ChatPanel (Vue 3 + Vite)"]
-    end
+  subgraph Client
+    U[User] --> F["ChatPanel (Vue 3 + Vite)"]
+  end
 
-    subgraph Server["Rust Backend (Axum)"]
-      F -->|HTTP/SSE| B["API Gateway & SSE Handler"]
-      B --> R["MCP Router\n(Prompt Builder • Intent Classifier • Joiner)"]
-      R -->|JSON Schema| O["OpenAI Responses API"]
-      R --> E1["/api/gitlab-ci/"]
-      R --> E2["/api/runtime-logs/"]
-      R --> E3["/api/observability/"]
-      R --> E4["/api/security-auth/"]
-      R --> E5["/api/incident-metrics/"]
-      R <-- DB[("MySQL 8")]
-      B --> DB
-    end
+  subgraph Server["Rust Backend (Axum)"]
+    DB[(MySQL 8)]
 
-    O -.-> R
-    E1 -. JSON .-> R
-    E2 -. JSON .-> R
-    E3 -. JSON .-> R
-    E4 -. JSON .-> R
-    E5 -. JSON .-> R
+    F -->|HTTP/SSE| B["API Gateway & SSE Handler"]
+    B --> R["MCP Router\n(Prompt Builder • Intent Classifier • Joiner)"]
+    R -->|JSON Schema| O["OpenAI Responses API"]
 
-    R -->|Normalized Result| B
-    B -->|SSE Stream| F
-    F --> U
+    R --> E1["/api/gitlab-ci/"]
+    R --> E2["/api/runtime-logs/"]
+    R --> E3["/api/observability/"]
+    R --> E4["/api/security-auth/"]
+    R --> E5["/api/incident-metrics/"]
+
+    R <-- DB
+    B --> DB
+  end
+
+  O -.-> R
+  E1 -. JSON .-> R
+  E2 -. JSON .-> R
+  E3 -. JSON .-> R
+  E4 -. JSON .-> R
+  E5 -. JSON .-> R
+
+  R -->|Normalized Result| B
+  B -->|SSE Stream| F
+  F --> U
 
 ```
 
