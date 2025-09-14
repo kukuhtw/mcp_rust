@@ -30,7 +30,6 @@ sequenceDiagram
 
 ````
 
-```markdown
 ## 🏗 Architecture Overview
 
 ### Components
