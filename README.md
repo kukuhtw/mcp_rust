@@ -100,19 +100,19 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     subgraph Client
-      U[User] --> F [ChatPanel (Vue 3 or Vite)]
+      U[User] --> F["ChatPanel (Vue 3 + Vite)"]
     end
 
-    subgraph Server[Rust Backend (Axum)]
-      F -->|HTTP/SSE| B[API Gateway & SSE Handler]
-      B --> R[MCP Router<br/>(Prompt Builder • Intent Classifier • Joiner)]
-      R -->|JSON Schema| O[OpenAI Responses API]
-      R --> E1[/api/gitlab-ci/]
-      R --> E2[/api/runtime-logs/]
-      R --> E3[/api/observability/]
-      R --> E4[/api/security-auth/]
-      R --> E5[/api/incident-metrics/]
-      R <-- DB[(MySQL 8)]
+    subgraph Server["Rust Backend (Axum)"]
+      F -->|HTTP/SSE| B["API Gateway & SSE Handler"]
+      B --> R["MCP Router\n(Prompt Builder • Intent Classifier • Joiner)"]
+      R -->|JSON Schema| O["OpenAI Responses API"]
+      R --> E1["/api/gitlab-ci/"]
+      R --> E2["/api/runtime-logs/"]
+      R --> E3["/api/observability/"]
+      R --> E4["/api/security-auth/"]
+      R --> E5["/api/incident-metrics/"]
+      R <-- DB[("MySQL 8")]
       B --> DB
     end
 
@@ -126,6 +126,7 @@ flowchart TD
     R -->|Normalized Result| B
     B -->|SSE Stream| F
     F --> U
+
 ```
 
 
