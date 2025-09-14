@@ -1,4 +1,4 @@
-````
+
 # 🚇 SMRT MCP PoC
 
 > **Proof of Concept (PoC)** implementation of the **Model Context Protocol (MCP)** using **Rust**,  
