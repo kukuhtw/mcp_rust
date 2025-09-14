@@ -1,0 +1,9 @@
+-- Debug trace streaming SSE
+CREATE TABLE IF NOT EXISTS debug_traces (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  trace_id VARCHAR(128) NOT NULL,
+  phase VARCHAR(64) NOT NULL,
+  payload JSON NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX (trace_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -1,0 +1,44 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: smrt-mcp-backend
+    environment:
+      - DATABASE_URL=mysql://smrt:smrtpass@db:3306/smrt_mcp
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - RUST_LOG=info
+      - TZ=Asia/Singapore
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: smrt-mcp-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  db:
+    image: mysql:8.4
+    container_name: smrt-mcp-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: smrt_mcp
+      MYSQL_USER: smrt
+      MYSQL_PASSWORD: smrtpass
+      TZ: Asia/Singapore
+    command: ["--default-authentication-plugin=mysql_native_password"]
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ../migrations:/docker-entrypoint-initdb.d
+
+volumes:
+  db_data:

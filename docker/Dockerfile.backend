@@ -1,0 +1,39 @@
+# ========= planner: analyze deps =========
+FROM rust:1.89 AS planner
+WORKDIR /app
+RUN cargo install cargo-chef
+COPY backend ./backend
+WORKDIR /app/backend
+RUN cargo chef prepare --recipe-path recipe.json
+
+# ========= cacher: build deps cache =========
+FROM rust:1.89 AS cacher
+WORKDIR /app/backend
+RUN cargo install cargo-chef
+COPY --from=planner /app/backend/recipe.json recipe.json
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true \
+    CARGO_NET_RETRY=10 \
+    CARGO_HTTP_TIMEOUT=600 \
+    CARGO_HTTP_MULTIPLEXING=false
+RUN cargo chef cook --release --recipe-path recipe.json -j 4
+
+# ========= builder: build the app =========
+FROM rust:1.89 AS builder
+WORKDIR /app/backend
+COPY --from=cacher /usr/local/cargo /usr/local/cargo
+COPY --from=cacher /app/backend/target /app/backend/target
+COPY backend ./
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true \
+    CARGO_NET_RETRY=10 \
+    CARGO_HTTP_TIMEOUT=600 \
+    CARGO_HTTP_MULTIPLEXING=false
+RUN cargo build --release --locked -j 4
+
+# ========= runtime: slim image =========
+FROM debian:bookworm-slim AS runtime
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/backend/target/release/smrt-mcp-backend /usr/local/bin/smrt-mcp-backend
+ENV TZ=Asia/Singapore
+EXPOSE 8080
+CMD ["smrt-mcp-backend"]

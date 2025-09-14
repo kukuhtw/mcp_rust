@@ -1,0 +1,13 @@
+// frontend/tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "types": ["vite/client"]
+  },
+  "include": ["src"]
+}
