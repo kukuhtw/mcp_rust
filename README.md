@@ -142,6 +142,203 @@ flowchart TD
 * `users` / `sessions` — for future JWT-based auth.
 
 ---
+Awesome—here’s a **ready-to-paste** README section that adds your **10 example questions** and shows **how the MCP server routes each one** (intent → endpoint(s) → params → result shape). It matches the style of your current README.
+
+````markdown
+## 💬 Example Questions & How MCP Routes Them
+
+Below are 10 natural-language questions and how the **MCP Router** resolves each:
+- Detects the **intent** using OpenAI (Responses API + JSON Schema).
+- Maps the intent to one or more **API endpoints**.
+- Builds **query params** (time range, service, environment, branch).
+- **Fetches** and (when needed) **joins** payloads.
+- Emits a **normalized result** back to the SSE stream for the UI.
+
+> Response phases on SSE: `received → llm_start → route_planned → fetch_progress → joined → done`
+
+---
+
+### 1) Why did the CI/CD pipeline fail to deploy to staging last night?
+- **Intent:** `ci_root_cause`
+- **Endpoint(s):** `/api/gitlab-ci`, `/api/deployments`
+- **Params:** `env=staging`, `date=yesterday`
+- **Notes:** Joins CI job status with deployment attempt; extracts failure summary.
+- **Normalized result (shape):**
+```json
+{
+  "intent": "ci_root_cause",
+  "ci": { "pipeline_status": "failed", "failed_tests": ["payment_refund_spec", "auth_token_expiry_spec"] },
+  "deployments": { "env": "staging", "last_attempt": "failed", "reason": "migration timeout" },
+  "answer": "Deployment to staging failed due to a migration timeout; 2 tests failed in CI."
+}
+````
+
+---
+
+### 2) Can you show me the latest runtime logs for the payments service?
+
+* **Intent:** `logs_fetch`
+* **Endpoint(s):** `/api/runtime-logs`
+* **Params:** `service=payments`, `limit=200`, `order=desc`
+* **Notes:** Streams tail logs; UI truncates or folds lines for readability.
+* **Normalized result (shape):**
+
+```json
+{ "intent": "logs_fetch", "service": "payments", "lines": ["2025-09-14T... INFO ...", "..."] }
+```
+
+---
+
+### 3) How many unresolved tickets are in the observability dashboard right now?
+
+* **Intent:** `observability_ticket_count`
+* **Endpoint(s):** `/api/observability`
+* **Params:** `metric=unresolved_tickets`, `window=now`
+* **Notes:** Returns a single KPI; suitable for a badge or chip in UI.
+* **Normalized result (shape):**
+
+```json
+{ "intent": "observability_ticket_count", "kpi": { "unresolved_tickets": 17, "as_of": "2025-09-14T10:05:00Z" } }
+```
+
+---
+
+### 4) Did the last GitLab CI job for the main branch succeed or fail?
+
+* **Intent:** `ci_status`
+* **Endpoint(s):** `/api/gitlab-ci`
+* **Params:** `branch=main`, `limit=1`
+* **Notes:** Minimal fetch; short, declarative answer.
+* **Normalized result (shape):**
+
+```json
+{ "intent": "ci_status", "branch": "main", "last_pipeline": { "status": "success", "duration_sec": 612 } }
+```
+
+---
+
+### 5) What is the current error rate in the production API gateway?
+
+* **Intent:** `error_rate`
+* **Endpoint(s):** `/api/observability`
+* **Params:** `service=api-gateway`, `env=prod`, `metric=error_rate`, `window=5m`
+* **Notes:** Returns rate plus optional thresholds for coloring.
+* **Normalized result (shape):**
+
+```json
+{ "intent": "error_rate", "service": "api-gateway", "env": "prod", "error_rate_pct": 0.42, "window": "5m" }
+```
+
+---
+
+### 6) Can you compare the deployment duration between staging and production for the last 3 releases?
+
+* **Intent:** `deploy_duration_compare`
+* **Endpoint(s):** `/api/deployments`, `/api/releases`
+* **Params:** `env=staging,prod`, `limit=3`
+* **Notes:** Joins releases→deploys; returns arrays for charting.
+* **Normalized result (shape):**
+
+```json
+{
+  "intent": "deploy_duration_compare",
+  "releases": ["v1.12.0","v1.11.3","v1.11.2"],
+  "staging_durations_sec": [410, 380, 395],
+  "prod_durations_sec": [520, 505, 498]
+}
+```
+
+---
+
+### 7) Show me the container logs for the auth-service during yesterday’s deployment.
+
+* **Intent:** `logs_during_window`
+* **Endpoint(s):** `/api/runtime-logs`, `/api/deployments`
+* **Params:** `service=auth-service`, `window=yesterday_deploy_window`
+* **Notes:** Determines deploy window from `/api/deployments`, then filters logs to that interval.
+* **Normalized result (shape):**
+
+```json
+{
+  "intent": "logs_during_window",
+  "service": "auth-service",
+  "window": { "from": "2025-09-13T13:10:00Z", "to": "2025-09-13T13:28:00Z" },
+  "lines": ["..."]
+}
+```
+
+---
+
+### 8) Which microservice caused the rollback in last night’s release?
+
+* **Intent:** `rollback_root_cause`
+* **Endpoint(s):** `/api/releases`, `/api/deployments`, `/api/runtime-logs`
+* **Params:** `date=yesterday`, `env=prod`
+* **Notes:** Multi-endpoint join: find release→detect rollback→scan correlated errors to infer culprit.
+* **Normalized result (shape):**
+
+```json
+{
+  "intent": "rollback_root_cause",
+  "release": "v1.12.0",
+  "rolled_back": true,
+  "culprit_service": "inventory-service",
+  "evidence": ["spike 5xx post-deploy", "db deadlock traces"]
+}
+```
+
+---
+
+### 9) List all failed test cases from the last CI run.
+
+* **Intent:** `ci_failed_tests`
+* **Endpoint(s):** `/api/gitlab-ci`
+* **Params:** `branch=main` (default), `limit=1`
+* **Notes:** Surfaces failed specs for quick triage.
+* **Normalized result (shape):**
+
+```json
+{ "intent": "ci_failed_tests", "failed_tests": ["checkout_flow_spec", "coupon_apply_spec"] }
+```
+
+---
+
+### 10) What is the average response time for the orders API in the past 24 hours?
+
+* **Intent:** `latency_avg`
+* **Endpoint(s):** `/api/observability`
+* **Params:** `service=orders-api`, `metric=latency_p50`, `window=24h`
+* **Notes:** Can return `p50/p95/p99` for richer cards.
+* **Normalized result (shape):**
+
+```json
+{
+  "intent": "latency_avg",
+  "service": "orders-api",
+  "window": "24h",
+  "latency_ms": { "p50": 88, "p95": 210, "p99": 370 }
+}
+```
+
+---
+
+### How the MCP Server Decides the Endpoint
+
+1. **Intent detection** (LLM): The request body (`text`, optional hints like `env`, `service`) is fed to OpenAI Responses API with a **JSON Schema** that enforces:
+
+   * `intent` (enum of supported intents)
+   * `endpoints` (1..N)
+   * `params` (validated keys: `env`, `branch`, `date`, `window`, `service`, etc.)
+2. **Routing plan**: The MCP Router reads the structured output and builds a plan:
+
+   * Single endpoint (e.g., `ci_status → /api/gitlab-ci`)
+   * Multi-endpoint join (e.g., `rollback_root_cause → /api/releases + /api/deployments + /api/runtime-logs`)
+3. **Fetch & join**: Executes HTTP calls to dummy endpoints, merges payloads into a **normalized shape**.
+4. **Stream to UI**: Streams each phase via **SSE** so the ChatPanel can render progress and final answers.
+
+```
+
+---
 
 ## 🚀 Extension Ideas
 
