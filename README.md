@@ -1,50 +1,52 @@
+Got it 🚀 I’ll rewrite the entire README fully in **English**, keeping the professional style, emojis, and the new **sequence flow diagram**. Here’s the polished version:
 
 ```markdown
 # 🚇 SMRT MCP PoC
 
-This repository is a **Proof of Concept (PoC)** implementation of the **Model Context Protocol (MCP)**, built using **Rust**.  
-It demonstrates how MCP can be applied in an **IT operations scenario** for the **Singapore Mass Rapid Transportation (SMRT)** system.
+> **Proof of Concept (PoC)** implementation of the **Model Context Protocol (MCP)** using **Rust**,  
+> applied in an **IT Operations** scenario for the **Singapore Mass Rapid Transportation (SMRT)** system.  
 
-⚠️ **Disclaimer**: This project is for **demonstration and educational purposes only**.  
-I am **not affiliated** with the IT Department of Singapore Mass Rapid Transportation.  
- 
+⚠️ **Disclaimer**  
+This project is for **demonstration & educational purposes only**.  
+I am **not affiliated** with the IT Department of SMRT.  
 
 ---
 
 ## 🧩 What is MCP?
 
-**Model Context Protocol (MCP)** is a mechanism that allows an AI assistant to interpret a user’s natural-language question, determine the correct **intent**, and then fetch relevant data from **external sources** (via APIs).  
+**Model Context Protocol (MCP)** is a mechanism that allows an AI Assistant to:  
 
-In this PoC, MCP routes user questions to **10 different API endpoints** that represent logs and metrics for application development in an IT department setting.  
+1. **Understand natural-language questions** from users.  
+2. **Detect the intent** (e.g., `logs_fetch`, `ci_status`).  
+3. **Map the intent** to the correct **API endpoint(s)**.  
+4. **Fetch data** → and let the AI generate a **human-readable answer**.  
 
-**Example:**  
-- User asks: *“Did the last GitLab CI job for the main branch succeed or fail?”*  
-- MCP routes the request to `/api/gitlab-ci`.  
-- The endpoint returns dummy JSON with job status and failed test cases.  
-- The AI uses that data to generate a human-readable answer.  
-
-This demonstrates how MCP can **bridge user intent with external data sources**.
+💡 **Example Scenario:**  
+> User: *“Did the last GitLab CI job for the main branch succeed or fail?”*  
+> 🔀 MCP → `/api/gitlab-ci` → returns dummy JSON → AI composes a human-readable response.  
 
 ---
 
 ## 🔧 Tech Stack
-- **Backend**: Rust (Axum, SQLx, Reqwest, SSE)
-- **Frontend**: Vue 3 + Vite + TypeScript
-- **Database**: MySQL 8
-- **Infra**: Docker & Docker Compose
-- **AI**: OpenAI GPT (Responses API, JSON Schema)
+
+- 🦀 **Backend**: Rust (Axum, SQLx, Reqwest, SSE)  
+- ⚡ **Frontend**: Vue 3 + Vite + TypeScript  
+- 🗄️ **Database**: MySQL 8  
+- 🐳 **Infrastructure**: Docker & Docker Compose  
+- 🤖 **AI**: OpenAI GPT (Responses API + JSON Schema)  
 
 ---
 
 ## 📂 Project Structure
+
 ```
 
 smrt-mcp-poc/
-├─ backend/         # Rust backend (API + MCP Router)
-├─ frontend/        # Vue 3 chat dashboard
-├─ data/            # seed/init SQL
-├─ migrations/      # schema migrations
-├─ docker/          # dockerfiles & compose
+├─ backend/       # Rust backend (API + MCP Router)
+├─ frontend/      # Vue 3 chat dashboard
+├─ data/          # seed/init SQL
+├─ migrations/    # schema migrations
+├─ docker/        # dockerfiles & compose
 └─ README.md
 
 ```
@@ -53,42 +55,77 @@ smrt-mcp-poc/
 
 ## ⚡ MCP Endpoint Diagram
 
-Here are the **10 dummy endpoints** implemented in this PoC:  
+This PoC includes **10 dummy endpoints**:
 
 ```
 
-/api/runtime-logs        → Synthetic container logs (payments, auth, etc.)
-/api/gitlab-ci           → CI/CD status, failed tests
-/api/observability       → Metrics (latency, unresolved tickets, avg response time)
-/api/security-auth       → Security events (failed logins, error rates)
-/api/incident-metrics    → MTTR, deployment comparisons
-/api/test-join           → Multi-endpoint join for testing
-/api/settings            → System settings dummy
-/api/alerts              → Alerting dummy (on-call notifications)
-/api/releases            → Release tracking dummy
-/api/deployments         → Deployment metrics dummy
+/api/runtime-logs     → Synthetic container logs
+/api/gitlab-ci        → CI/CD status & failed tests
+/api/observability    → Metrics (latency, unresolved tickets, etc.)
+/api/security-auth    → Security events (failed logins, errors)
+/api/incident-metrics → MTTR, deployment comparisons
+/api/test-join        → Join multiple endpoints (dummy test)
+/api/settings         → System settings dummy
+/api/alerts           → On-call notifications dummy
+/api/releases         → Release tracking dummy
+/api/deployments      → Deployment metrics dummy
 
 ````
 
-📊 **How it works**:  
-1. User question is parsed into intent → e.g. `logs_fetch`.  
-2. MCP maps intent → correct endpoint(s).  
-3. Backend fetches dummy data.  
-4. AI composes the response → displayed in the chat UI.  
+📊 **How it works:**  
+User Question → MCP Intent Detection → API Endpoint → Fetch Data → AI Response → Chat UI  
+
+---
+
+## 🔄 Sequence Flow
+
+```text
++---------+        +-------------+        +-----------------+        +------------+
+|  User   | -----> |  ChatPanel  | -----> |   MCP Router    | -----> |  Endpoint  |
++---------+        +-------------+        +-----------------+        +------------+
+     |                   |                         |                        |
+     | Ask question       |  POST /api/chat        | Detect intent          |
+     |------------------->|----------------------->|----------------------->|
+     |                    |                        |   Call API (dummy)     |
+     |                    |                        |----------------------->|
+     |                    |                        |  Return JSON Response  |
+     |                    |<-----------------------|<-----------------------|
+     |  AI answer shown   |  Stream via SSE        | Join + Format Result   |
+     |<-------------------|<-----------------------|                         |
+````
+
+🌀 SSE Debug Phases:
+`received → llm_start → route_planned → fetch_progress → joined → done`
+
+---
+
+## 💬 Example Questions
+
+Here are **sample natural-language queries** that can be answered by MCP:
+
+* ❓ *Why did the CI/CD pipeline fail to deploy to staging last night?*
+* 📜 *Can you show me the latest runtime logs for the payments service?*
+* 📝 *How many unresolved tickets are in the observability dashboard right now?*
+* 🔍 *Did the last GitLab CI job for the main branch succeed or fail?*
+* ⚠️ *What is the current error rate in the production API gateway?*
+* ⏱ *Can you compare the deployment duration between staging and production for the last 3 releases?*
+* 📂 *Show me the container logs for the auth-service during yesterday’s deployment.*
+* 🛠 *Which microservice caused the rollback in last night’s release?*
+* 🧪 *List all failed test cases from the last CI run.*
+* 📊 *What is the average response time for the orders API in the past 24 hours?*
 
 ---
 
 ## ⚙️ Setup & Run
 
-### 1. Clone Repo
+### 1. Clone Repository
+
 ```bash
 git clone https://github.com/your-org/smrt-mcp-poc.git
 cd smrt-mcp-poc
-````
+```
 
 ### 2. Create `.env`
-
-Fill in your OpenAI API key & DB connection string:
 
 ```env
 DATABASE_URL=mysql://smrt:smrtpass@db:3306/smrt_mcp
@@ -99,95 +136,32 @@ RUST_LOG=info
 TZ=Asia/Singapore
 ```
 
-⚠️ **Never commit `.env`** → already ignored in `.gitignore`.
-
 ### 3. Run with Docker Compose
 
 ```bash
-make build   # build backend & frontend
-make up      # start all services
-make logs    # view backend logs
+make build
+make up
+make logs
 ```
 
 Services:
 
-* **Backend** → [http://localhost:8080](http://localhost:8080)
-* **Frontend** → [http://localhost:3000](http://localhost:3000)
-* **MySQL** → localhost:3306 (`smrt/smrtpass`, db: `smrt_mcp`)
-
----
-
-## 💬 Chat Interface
-
-The **ChatPanel frontend** allows you to ask natural-language questions.
-
-Example prompts:
-
-```
-Why did the CI/CD pipeline fail to deploy to staging last night?
-Can you show me the latest runtime logs for the payments service?
-How many unresolved tickets are in the observability dashboard right now?
-Did the last GitLab CI job for the main branch succeed or fail?
-What is the current error rate in the production API gateway?
-Can you compare the deployment duration between staging and production for the last 3 releases?
-Show me the container logs for the auth-service during yesterday’s deployment.
-Which microservice caused the rollback in last night’s release?
-List all failed test cases from the last CI run.
-What is the average response time for the orders API in the past 24 hours?
-```
-
-### Request Flow
-
-1. User sends a question → `/api/chat` or `/api/chat/stream` (SSE).
-2. MCP performs **intent detection** (via OpenAI).
-3. MCP router maps the intent → e.g. `/api/gitlab-ci`, `/api/runtime-logs`.
-4. Data is fetched from external endpoints (dummy data in this PoC).
-5. Results are joined and streamed back to the UI.
-
-Debug log phases in SSE:
-`received → llm_start → route_planned → fetch_progress → joined → done`
-
----
-
-## 🛠️ Run Without Docker
-
-### Backend
-
-```bash
-cd backend
-cargo run
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Apply DB Migration
-
-```bash
-# inside container
-make sh-db
-
-# or local
-mysql -u smrt -psmrtpass smrt_mcp < migrations/20250914_000001_create_settings.sql
-```
+* Backend → [http://localhost:8080](http://localhost:8080)
+* Frontend → [http://localhost:3000](http://localhost:3000)
+* MySQL → `localhost:3306` (`smrt/smrtpass`, db: `smrt_mcp`)
 
 ---
 
 ## ✅ Testing
 
-Health check:
+Health Check:
 
 ```bash
 curl http://localhost:8080/health
 # ok
 ```
 
-Join dummy test:
+Dummy Join Test:
 
 ```bash
 curl "http://localhost:8080/api/test-join?date_from=2025-09-14&date_to=2025-09-14&tz=Asia/Singapore"
@@ -197,17 +171,17 @@ curl "http://localhost:8080/api/test-join?date_from=2025-09-14&date_to=2025-09-1
 
 ## 📌 Next Steps
 
-* Integrate with real Observability APIs (Grafana, Prometheus).
-* Add caching for endpoint results (`api_results`).
-* Add security and multi-user auth (`users` + JWT).
-* Full OpenAI streaming integration with detailed SSE debug logs.
+* 🔗 Integrate with real Observability APIs (Grafana, Prometheus)
+* ⚡ Add caching (`api_results`)
+* 🔒 Multi-user authentication + JWT
+* 📡 Full SSE debug logs with OpenAI streaming
 
 ---
 
 ## 👤 Author
 
 **Kukuh Tripamungkas Wicaksono (Kukuh TW)**
-💻 Software Architect 
+💻 Software Architect
 
 * 📧 Email: [kukuhtw@gmail.com](mailto:kukuhtw@gmail.com)
 * 📱 WhatsApp: [wa.me/628129893706](https://wa.me/628129893706)
@@ -218,3 +192,5 @@ curl "http://localhost:8080/api/test-join?date_from=2025-09-14&date_to=2025-09-1
 
 ```
 
+Do you also want me to add a **Mermaid diagram** version of the sequence flow (so GitHub can render it as an interactive flowchart) alongside the ASCII one?
+```
