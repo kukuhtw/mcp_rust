@@ -1,4 +1,3 @@
-Got it 🚀 I’ll rewrite the entire README fully in **English**, keeping the professional style, emojis, and the new **sequence flow diagram**. Here’s the polished version:
 
 ```markdown
 # 🚇 SMRT MCP PoC
@@ -190,7 +189,4 @@ curl "http://localhost:8080/api/test-join?date_from=2025-09-14&date_to=2025-09-1
 
 ---
 
-```
 
-Do you also want me to add a **Mermaid diagram** version of the sequence flow (so GitHub can render it as an interactive flowchart) alongside the ASCII one?
-```
