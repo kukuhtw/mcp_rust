@@ -1,4 +1,50 @@
 
+# 🚇 SMRT MCP PoC
+
+> **Proof of Concept (PoC)** implementation of the **Model Context Protocol (MCP)** using **Rust**,  
+> applied in an **IT Operations** scenario for the **Singapore Mass Rapid Transportation (SMRT)** system.  
+
+⚠️ **Disclaimer**  
+This project is for **demonstration & educational purposes only**.  
+I am **not affiliated** with the IT Department of SMRT.  
+
+---
+
+## 🧩 What is MCP?
+
+**Model Context Protocol (MCP)** is a standard for connecting AI assistants to external tools, data sources, and APIs.  
+
+Instead of hardcoding application logic or asking users to memorize commands, MCP enables an **AI-driven intent router** that:  
+
+1. Accepts **natural language** queries from users.  
+2. Uses an **AI model** (OpenAI Responses API with JSON Schema) to **detect the intent**.  
+3. Maps the intent to **one or more API endpoints**.  
+4. Fetches and optionally **joins data** from those endpoints.  
+5. Returns results to the AI for **human-readable answers** in the chat interface.  
+
+💡 **Example:**  
+User: *“Did the last GitLab CI job for the main branch succeed or fail?”*  
+- MCP Router detects intent = `ci_status`.  
+- Routes to `/api/gitlab-ci`.  
+- Fetches dummy JSON with job status + failed tests.  
+- AI composes a clear answer for the user.  
+
+👉 With MCP, developers don’t have to build custom logic for each question. Instead, **MCP bridges user intent ↔ system APIs** in a structured, scalable way.
+
+---
+
+## 🔧 Tech Stack
+
+- 🦀 **Backend**: Rust (Axum, SQLx, Reqwest, SSE)  
+- ⚡ **Frontend**: Vue 3 + Vite + TypeScript  
+- 🗄️ **Database**: MySQL 8  
+- 🐳 **Infrastructure**: Docker & Docker Compose  
+- 🤖 **AI**: OpenAI GPT (Responses API + JSON Schema)  
+
+---
+
+## 📂 Project Structure
+
 
 
 ## 🔄 Sequence Flow (Mermaid)
