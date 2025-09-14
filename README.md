@@ -76,7 +76,56 @@ sequenceDiagram
 
 ````
 
+
+```markdown
 ## 🏗 Architecture Overview
+
+### Components
+- **Frontend (Vue 3 + Vite + TS)** — ChatPanel UI, SSE streaming, status chips (intent/endpoint/phases).
+- **Backend (Rust/Axum)** — HTTP API, SSE handler, tracing, error handling.
+- **MCP Router (Rust module)** — Prompt Builder → Intent Classifier → Endpoint Planner → Normalizer/Joiner.
+- **AI (OpenAI GPT)** — Intent detection with JSON Schema output.
+- **Data Sources (Dummy Endpoints)** — `/api/gitlab-ci`, `/api/runtime-logs`, `/api/observability`, `/api/security-auth`, `/api/incident-metrics`, etc.
+- **Database (MySQL 8)** — Config & optional cache (`api_results`), future auth (`users`, `sessions`).
+- **Infra (Docker & Compose)** — Reproducible local stack.
+
+### High-Level Data Flow
+1. User asks in ChatPanel → `POST /api/chat` (or `/api/chat/stream` for SSE).  
+2. Backend forwards to **MCP Router**.  
+3. MCP calls **OpenAI** (Responses API + JSON Schema) to get intent & routing plan.  
+4. MCP fetches from mapped endpoint(s), optionally consults **MySQL**.  
+5. MCP normalizes/joins → Backend streams via **SSE** → UI renders phases & final answer.
+
+### Architecture Diagram (Mermaid)
+```mermaid
+flowchart TD
+    subgraph Client
+      U[User] --> F[ChatPanel (Vue 3 + Vite)]
+    end
+
+    subgraph Server[Rust Backend (Axum)]
+      F -->|HTTP/SSE| B[API Gateway & SSE Handler]
+      B --> R[MCP Router<br/>(Prompt Builder • Intent Classifier • Joiner)]
+      R -->|JSON Schema| O[OpenAI Responses API]
+      R --> E1[/api/gitlab-ci/]
+      R --> E2[/api/runtime-logs/]
+      R --> E3[/api/observability/]
+      R --> E4[/api/security-auth/]
+      R --> E5[/api/incident-metrics/]
+      R <-- DB[(MySQL 8)]
+      B --> DB
+    end
+
+    O -.-> R
+    E1 -. JSON .-> R
+    E2 -. JSON .-> R
+    E3 -. JSON .-> R
+    E4 -. JSON .-> R
+    E5 -. JSON .-> R
+
+    R -->|Normalized Result| B
+    B -->|SSE Stream| F
+    F --> U
 
 ### Components
 - **Frontend (Vue 3 + Vite + TS)**  
