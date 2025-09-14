@@ -209,4 +209,17 @@ flowchart TD
 * Expose **/internal/debug** for tracing intent & routing decisions.
 
 ---
+👤 Author
+
+Kukuh Tripamungkas Wicaksono (Kukuh TW)
+💻 Software Architect
+
+📧 Email: kukuhtw@gmail.com
+
+📱 WhatsApp: wa.me/628129893706
+
+🔗 LinkedIn: linkedin.com/in/kukuhtw
+
+🐙 GitHub: github.com/kukuhtw
+
 
