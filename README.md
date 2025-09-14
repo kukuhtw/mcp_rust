@@ -100,7 +100,7 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     subgraph Client
-      U[User] --> F[ChatPanel (Vue 3 + Vite)]
+      U[User] --> F [ChatPanel (Vue 3 + Vite)]
     end
 
     subgraph Server[Rust Backend (Axum)]
@@ -128,7 +128,7 @@ flowchart TD
     F --> U
 ```
 
----
+
 
 ## 📊 Suggested Tables (PoC-Friendly)
 
